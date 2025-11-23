@@ -7822,7 +7822,18 @@ jQuery(document).ready(function ($) {
 // Load data from Supabase instead of JSON file
 (async function() {
     try {
-        console.log('[' + new Date().toLocaleTimeString() + '] Loading from Supabase...');
+        console.log('[' + new Date().toLocaleTimeString() + '] 🚀 Loading from Supabase...');
+
+        // Clear service worker cache if exists to ensure fresh data
+        if ('caches' in window) {
+            console.log('🧹 Clearing service worker cache...');
+            caches.keys().then(function(names) {
+                names.forEach(function(name) {
+                    caches.delete(name);
+                });
+            });
+        }
+
         const supabase = window.supabase.createClient(
             'https://sdcakojgzfscudadzrfg.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkY2Frb2pnemZzY3VkYWR6cmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODAxMjEsImV4cCI6MjA3OTQ1NjEyMX0.7r240PEhv8Skda-zqOM7o2u9PpHnFWWECKIGxoBvnP4'
@@ -7855,7 +7866,15 @@ jQuery(document).ready(function ($) {
 })();
 
 function updateContent(data) {
-  console.log('Updating content with data:', data);
+  console.log('🔄 Updating content with data:', data);
+
+  // Clear all old background images first to prevent flash of old content
+  console.log('🧹 Clearing old background images...');
+  var bgSections = document.querySelectorAll('[data-dce-background-image-url], [data-custom-background]');
+  bgSections.forEach(function(el) {
+    el.style.setProperty('background-image', 'none', 'important');
+    el.removeAttribute('data-dce-background-image-url');
+  });
 
   // Update all text content
   if(data.hero_title){var a=document.getElementById('hero-title');if(a)a.textContent=data.hero_title;var b=document.getElementById('hero-title-2');if(b)b.textContent=data.hero_title_2||data.hero_title;}
