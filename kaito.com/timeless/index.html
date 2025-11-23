@@ -7814,8 +7814,39 @@ jQuery(document).ready(function ($) {
             links.forEach(function(a){ a.addEventListener('click', handleClick); });
         })();
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <script>
-fetch('../data/content.json').then(function(r){return r.json()}).then(function(data){
+// Load data from Supabase instead of JSON file
+(async function() {
+    try {
+        const supabase = window.supabase.createClient(
+            'https://sdcakojgzfscudadzrfg.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkY2Frb2pnemZzY3VkYWR6cmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODAxMjEsImV4cCI6MjA3OTQ1NjEyMX0.7r240PEhv8Skda-zqOM7o2u9PpHnFWWECKIGxoBvnP4'
+        );
+
+        const { data, error } = await supabase
+            .from('timeless_content')
+            .select('*')
+            .single();
+
+        if (error) {
+            console.log('No data in Supabase yet, using default content');
+            // Fallback to JSON if no data yet
+            fetch('../data/content.json').then(function(r){return r.json()}).then(updateContent);
+            return;
+        }
+
+        // Use Supabase data
+        updateContent(data);
+
+    } catch (err) {
+        console.error('Supabase error:', err);
+        // Fallback to JSON
+        fetch('../data/content.json').then(function(r){return r.json()}).then(updateContent);
+    }
+})();
+
+function updateContent(data) {
   // Update all text content
   if(data.hero_title){var a=document.getElementById('hero-title');if(a)a.textContent=data.hero_title;var b=document.getElementById('hero-title-2');if(b)b.textContent=data.hero_title_2||data.hero_title;}
   if(data.bride_name){var c=document.getElementById('bride-name');if(c)c.textContent=data.bride_name;var d=document.getElementById('groom-name');if(d)d.textContent=data.bride_name;}
@@ -8471,7 +8502,7 @@ fetch('../data/content.json').then(function(r){return r.json()}).then(function(d
   if(data.background_section_3){updateBackgroundImage('1ae512c4', data.background_section_3, 'background-section-3', data.background_section_3_size, data.background_section_3_position);}
   if(data.background_section_4){updateBackgroundImage('c53800f', data.background_section_4, 'background-section-4', data.background_section_4_size, data.background_section_4_position);}
   if(data.background_section_5){updateBackgroundImage('303ad26d', data.background_section_5, 'background-section-5', data.background_section_5_size, data.background_section_5_position);}
-  
+
   // Update gallery images
   if(data.gallery_images && data.gallery_images.length>0){
     var galleryItems=document.querySelectorAll('.gallery-lightbox img');
@@ -8479,7 +8510,7 @@ fetch('../data/content.json').then(function(r){return r.json()}).then(function(d
       if(data.gallery_images[idx])img.src=data.gallery_images[idx];
     });
   }
-});
+}
         </script>
  		</body>
 </html>
