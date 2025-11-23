@@ -8537,6 +8537,46 @@ function updateContent(data) {
       if(data.gallery_images[idx])img.src=data.gallery_images[idx];
     });
   }
+
+  // Update background_image (main background)
+  if(data.background_image){
+    console.log('Updating background_image:', data.background_image.substring(0, 50) + '...');
+    var backgroundElements = document.querySelectorAll('[style*="background-image"]');
+    backgroundElements.forEach(function(el) {
+      if (el.style.backgroundImage) {
+        el.style.backgroundImage = 'url(' + data.background_image + ')';
+      }
+    });
+  }
+
+  // Update groom_photo
+  if(data.groom_photo){
+    console.log('Updating groom_photo');
+    var groomPhotoElements = document.querySelectorAll('.groom-photo, img[alt*="groom" i], img[alt*="pria" i]');
+    groomPhotoElements.forEach(function(img) {
+      img.src = data.groom_photo;
+    });
+  }
+
+  // Update bride_photo
+  if(data.bride_photo){
+    console.log('Updating bride_photo');
+    var bridePhotoElements = document.querySelectorAll('.bride-photo, img[alt*="bride" i], img[alt*="wanita" i]');
+    bridePhotoElements.forEach(function(img) {
+      img.src = data.bride_photo;
+    });
+  }
+
+  // Update hero_image if exists
+  if(data.hero_image){
+    console.log('Updating hero_image');
+    var heroImageElements = document.querySelectorAll('.hero-image, #hero img');
+    heroImageElements.forEach(function(img) {
+      img.src = data.hero_image;
+    });
+  }
+
+  console.log('✅ All content updated from database!');
 }
         </script>
  		</body>
