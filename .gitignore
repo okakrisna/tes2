@@ -1,0 +1,31 @@
+# WordPress assets (exclude from repo to keep it light)
+kaito.com/elegant/kaito.com/wp-admin/
+kaito.com/elegant/kaito.com/wp-includes/
+kaito.com/elegant/kaito.com/wp-content/plugins/
+kaito.com/elegant/kaito.com/wp-content/themes/
+kaito.com/elegant/kaito.com/wp-content/uploads/**
+
+# Root-level WordPress duplicates
+kaito.com/wp-admin/
+kaito.com/wp-includes/
+kaito.com/wp-content/**
+
+# Large binary assets
+*.mp4
+*.zip
+*.rar
+*.7z
+*.exe
+*.dll
+*.iso
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Editor and environment files
+.vscode/
+.trae/
+.trae-aicc/
+.DS_Store
+Thumbs.db
