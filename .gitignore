@@ -29,3 +29,4 @@ __pycache__/
 .trae-aicc/
 .DS_Store
 Thumbs.db
+.env
