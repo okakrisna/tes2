@@ -169,15 +169,15 @@
     <div class="container">
         <h1>✨ Admin Panel Timeless</h1>
         <p class="subtitle">Edit konten undangan Hanson & Catherine</p>
-        <div style="background: #d4edda; border: 1px solid #28a745; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <strong>✅ Admin Panel Sudah Terintegrasi dengan Database!</strong>
+        <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <strong>📌 Cara Penggunaan:</strong>
             <ol style="margin: 10px 0 0 20px; line-height: 1.8;">
                 <li>Isi form dan upload gambar yang ingin diubah</li>
                 <li>Klik tombol "Simpan Semua Perubahan"</li>
-                <li>Data akan otomatis tersimpan ke database Supabase</li>
-                <li>Refresh halaman timeless untuk melihat perubahan terbaru</li>
+                <li>File <code>content.json</code> akan otomatis terdownload</li>
+                <li>Ganti file <code>kaito.com/data/content.json</code> dengan file yang baru didownload</li>
+                <li>Refresh halaman timeless untuk melihat perubahan</li>
             </ol>
-            <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;"><em>💡 Tidak perlu download-upload file lagi! Semua otomatis tersimpan.</em></p>
         </div>
 
         <div id="alert" class="alert"></div>
@@ -386,50 +386,26 @@
         // Load data saat halaman dibuka
         async function loadData() {
             try {
-                // Try to load from API first
-                const response = await fetch(API_URL);
-                if (response.ok) {
-                    const result = await response.json();
-                    let data = result.data;
+                // Load from localStorage
+                const savedData = localStorage.getItem('timeless_admin_data');
+                let data = null;
 
-                    // Fallback to JSON file if API returns no data
-                    if (!data) {
-                        try {
-                            const jsonResponse = await fetch('../data/content.json');
-                            if (jsonResponse.ok) {
-                                data = await jsonResponse.json();
-                            }
-                        } catch (e) {
-                            console.log('No existing data found');
-                            return;
+                if (savedData) {
+                    data = JSON.parse(savedData);
+                } else {
+                    // Try to load from JSON file
+                    try {
+                        const response = await fetch('../data/content.json');
+                        if (response.ok) {
+                            data = await response.json();
                         }
+                    } catch (e) {
+                        console.log('No existing data found');
                     }
-
-                    // Isi form dengan data yang ada
-                    if (data) {
-                        fillFormData(data);
-                    }
-                    return;
                 }
-            } catch (error) {
-                console.error('Error loading from API:', error);
-            }
 
-            // Fallback: Try to load from JSON file
-            try {
-                const response = await fetch('../data/content.json');
-                if (response.ok) {
-                    const data = await response.json();
-                    fillFormData(data);
-                }
-            } catch (e) {
-                console.log('No fallback data found');
-            }
-        }
-
-        // Helper function to fill form with data
-        function fillFormData(data) {
-            if (data) {
+                // Isi form dengan data yang ada
+                if (data) {
                     document.getElementById('couple_names').value = data.couple_names || '';
                     document.getElementById('groom_full_name').value = data.groom_full_name || '';
                     document.getElementById('bride_full_name').value = data.bride_full_name || '';
@@ -479,8 +455,9 @@
                             galleryPreview.appendChild(div);
                         });
                     }
-
-                    console.log('Data berhasil dimuat!');
+                }
+            } catch (err) {
+                console.error('Error loading data:', err);
             }
         }
 
@@ -547,12 +524,9 @@
                 // Load existing data to preserve other fields
                 let existingData = {};
                 try {
-                    const response = await fetch(API_URL);
+                    const response = await fetch('../data/content.json');
                     if (response.ok) {
-                        const result = await response.json();
-                        if (result.data) {
-                            existingData = result.data;
-                        }
+                        existingData = await response.json();
                     }
                 } catch (e) {
                     console.log('No existing data, will create new');
@@ -606,26 +580,19 @@
                     data.gallery_images = galleryImagesUrls;
                 }
 
-                // Save to API
-                const saveResponse = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+                // Save to localStorage
+                localStorage.setItem('timeless_admin_data', JSON.stringify(data));
 
-                if (!saveResponse.ok) {
-                    const errorData = await saveResponse.json();
-                    throw new Error(errorData.error || 'Failed to save data');
-                }
+                // Download as JSON file (user needs to manually save to data/content.json)
+                const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const downloadUrl = URL.createObjectURL(jsonBlob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = downloadUrl;
+                downloadLink.download = 'content.json';
+                downloadLink.click();
+                URL.revokeObjectURL(downloadUrl);
 
-                const saveResult = await saveResponse.json();
-                if (!saveResult.success) {
-                    throw new Error('Failed to save data');
-                }
-
-                showAlert('✅ Data berhasil disimpan ke database! Refresh halaman timeless untuk melihat perubahan.', 'success');
+                showAlert('✅ Data berhasil disimpan! File content.json akan otomatis terdownload. Simpan file tersebut ke folder kaito.com/data/content.json untuk mengganti file lama.', 'success');
                 btn.textContent = '✅ Berhasil Disimpan!';
 
                 // Clear file inputs

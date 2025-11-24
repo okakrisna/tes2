@@ -8036,19 +8036,12 @@ jQuery(document).ready(function ($) {
             }
         });
 
-        console.log('🚀 Loading from Supabase...');
-        const supabase = window.supabase.createClient(
-            'https://0ec90b57d6e95fcbda19832f.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw'
-        );
+        console.log('🚀 Loading from API...');
+        const API_URL = 'https://fnewihswvgtgzzsfaeis.supabase.co/functions/v1/timeless-content';
 
-        const { data, error } = await supabase
-            .from('timeless_content')
-            .select('*')
-            .single();
-
-        if (error) {
-            console.error('[ERROR] Supabase error:', error);
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+            console.error('[ERROR] API error:', response.status);
             if (!cachedData) {
                 console.log('[FALLBACK] Using JSON file');
                 fetch('../data/content.json?t=' + Date.now()).then(function(r){return r.json()}).then(updateContent);
@@ -8056,7 +8049,18 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        console.log('✅ Fresh data loaded from Supabase');
+        const result = await response.json();
+        const data = result.data;
+
+        if (!data) {
+            console.log('[NO DATA] Falling back to JSON file');
+            if (!cachedData) {
+                fetch('../data/content.json?t=' + Date.now()).then(function(r){return r.json()}).then(updateContent);
+            }
+            return;
+        }
+
+        console.log('✅ Fresh data loaded from API');
 
         // Save to cache
         localStorage.setItem(CACHE_KEY, JSON.stringify(data));
