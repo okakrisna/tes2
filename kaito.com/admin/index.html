@@ -169,6 +169,16 @@
     <div class="container">
         <h1>✨ Admin Panel Timeless</h1>
         <p class="subtitle">Edit konten undangan Hanson & Catherine</p>
+        <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <strong>📌 Cara Penggunaan:</strong>
+            <ol style="margin: 10px 0 0 20px; line-height: 1.8;">
+                <li>Isi form dan upload gambar yang ingin diubah</li>
+                <li>Klik tombol "Simpan Semua Perubahan"</li>
+                <li>File <code>content.json</code> akan otomatis terdownload</li>
+                <li>Ganti file <code>kaito.com/data/content.json</code> dengan file yang baru didownload</li>
+                <li>Refresh halaman timeless untuk melihat perubahan</li>
+            </ol>
+        </div>
 
         <div id="alert" class="alert"></div>
 
@@ -312,13 +322,8 @@
         <a href="../timeless/" class="preview-link" target="_blank">👁️ Lihat Preview Undangan</a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Inisialisasi Supabase
-        const SUPABASE_URL = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
-
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Note: Using localStorage and JSON file instead of Supabase due to connection issues
 
         // Preview gambar sebelum upload
         function previewImage(fileInputId, previewId) {
@@ -379,14 +384,22 @@
         // Load data saat halaman dibuka
         async function loadData() {
             try {
-                const { data, error } = await supabase
-                    .from('timeless_content')
-                    .select('*')
-                    .maybeSingle();
+                // Load from localStorage
+                const savedData = localStorage.getItem('timeless_admin_data');
+                let data = null;
 
-                if (error) {
-                    console.log('Error loading:', error);
-                    return;
+                if (savedData) {
+                    data = JSON.parse(savedData);
+                } else {
+                    // Try to load from JSON file
+                    try {
+                        const response = await fetch('../data/content.json');
+                        if (response.ok) {
+                            data = await response.json();
+                        }
+                    } catch (e) {
+                        console.log('No existing data found');
+                    }
                 }
 
                 // Isi form dengan data yang ada
@@ -394,13 +407,14 @@
                     document.getElementById('couple_names').value = data.couple_names || '';
                     document.getElementById('groom_full_name').value = data.groom_full_name || '';
                     document.getElementById('bride_full_name').value = data.bride_full_name || '';
-                    document.getElementById('wedding_title').value = data.wedding_title || '';
+                    document.getElementById('wedding_title').value = data.wedding_title || data.hero_title || '';
                     document.getElementById('wedding_date').value = data.wedding_date || '';
-                    document.getElementById('venue_name').value = data.venue_name || '';
+                    document.getElementById('venue_name').value = data.venue_name || data.wedding_location || '';
                     document.getElementById('venue_address').value = data.venue_address || '';
                     document.getElementById('venue_maps').value = data.venue_maps || '';
                     document.getElementById('ceremony_time').value = data.ceremony_time || '';
                     document.getElementById('reception_time').value = data.reception_time || '';
+                    document.getElementById('thank_you_message').value = data.thank_you_message || data.thanks_text || '';
 
                     // Set hidden inputs
                     document.getElementById('background_image').value = data.background_section_1 || data.background_image || '';
@@ -503,58 +517,80 @@
                     galleryImagesUrls = await uploadGalleryImages(galleryImagesFiles);
                 }
 
-                btn.textContent = '💾 Menyimpan ke database...';
+                btn.textContent = '💾 Menyimpan data...';
+
+                // Load existing data to preserve other fields
+                let existingData = {};
+                try {
+                    const response = await fetch('../data/content.json');
+                    if (response.ok) {
+                        existingData = await response.json();
+                    }
+                } catch (e) {
+                    console.log('No existing data, will create new');
+                }
 
                 const data = {
+                    ...existingData, // Preserve existing fields
                     couple_names: document.getElementById('couple_names').value,
                     groom_full_name: document.getElementById('groom_full_name').value,
                     bride_full_name: document.getElementById('bride_full_name').value,
                     wedding_title: document.getElementById('wedding_title').value,
+                    hero_title: document.getElementById('wedding_title').value,
                     wedding_date: document.getElementById('wedding_date').value,
+                    wedding_location: document.getElementById('venue_name').value,
                     venue_name: document.getElementById('venue_name').value,
                     venue_address: document.getElementById('venue_address').value,
                     venue_maps: document.getElementById('venue_maps').value,
                     ceremony_time: document.getElementById('ceremony_time').value,
-                    reception_time: document.getElementById('reception_time').value,
-                    background_section_1: backgroundImageUrl,
-                    background_section_2: groomPhotoUrl,
-                    background_section_3: bridePhotoUrl,
-                    hero_background_image: heroImageUrl,
-                    livestreaming_image: livestreamingImageUrl,
-                    thank_you_message: document.getElementById('thank_you_message').value,
-                    updated_at: new Date().toISOString()
+                    reception_time: document.getElementById('reception_time').value
                 };
+
+                // Only update image fields if new images were uploaded
+                if (backgroundImageUrl) {
+                    data.background_section_1 = backgroundImageUrl;
+                }
+                if (groomPhotoUrl) {
+                    data.background_section_2 = groomPhotoUrl;
+                }
+                if (bridePhotoUrl) {
+                    data.background_section_3 = bridePhotoUrl;
+                }
+                if (heroImageUrl) {
+                    data.hero_background_image = heroImageUrl;
+                    data.hero_image = heroImageUrl;
+                }
+                if (livestreamingImageUrl) {
+                    data.livestreaming_image = livestreamingImageUrl;
+                    data.streaming_image = livestreamingImageUrl;
+                }
+
+                const thankYouMsg = document.getElementById('thank_you_message').value;
+                if (thankYouMsg) {
+                    data.thank_you_message = thankYouMsg;
+                    data.thanks_text = thankYouMsg;
+                }
+
+                data.updated_at = new Date().toISOString();
 
                 // Add gallery images only if new ones were uploaded
                 if (galleryImagesUrls.length > 0) {
                     data.gallery_images = galleryImagesUrls;
                 }
 
-                // Cek apakah data sudah ada
-                const { data: existing } = await supabase
-                    .from('timeless_content')
-                    .select('id')
-                    .maybeSingle();
+                // Save to localStorage
+                localStorage.setItem('timeless_admin_data', JSON.stringify(data));
 
-                let result;
-                if (existing) {
-                    // Update data yang ada
-                    result = await supabase
-                        .from('timeless_content')
-                        .update(data)
-                        .eq('id', existing.id);
-                } else {
-                    // Insert data baru
-                    result = await supabase
-                        .from('timeless_content')
-                        .insert([data]);
-                }
+                // Download as JSON file (user needs to manually save to data/content.json)
+                const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const downloadUrl = URL.createObjectURL(jsonBlob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = downloadUrl;
+                downloadLink.download = 'content.json';
+                downloadLink.click();
+                URL.revokeObjectURL(downloadUrl);
 
-                if (result.error) {
-                    throw result.error;
-                }
-
-                showAlert('✅ Data berhasil disimpan!', 'success');
+                showAlert('✅ Data berhasil disimpan! File content.json akan otomatis terdownload. Simpan file tersebut ke folder kaito.com/data/content.json untuk mengganti file lama.', 'success');
                 btn.textContent = '✅ Berhasil Disimpan!';
 
                 // Clear file inputs
