@@ -323,9 +323,10 @@
     </div>
 
     <script>
-        // API Configuration
+        // API Configuration - Using REST API directly
         const SUPABASE_URL = 'https://fnewihswvgtgzzsfaeis.supabase.co';
-        const API_URL = `${SUPABASE_URL}/functions/v1/timeless-content`;
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuZXdpaHN3dmd0Z3p6c2ZhZWlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NzAwNzcsImV4cCI6MjA3OTU0NjA3N30.0OiXAfBDe5qGw8us5i9rjfNR75XdS0RlFojhy_RhKsY';
+        const REST_API_URL = `${SUPABASE_URL}/rest/v1/timeless_content`;
 
         // Preview gambar sebelum upload
         function previewImage(fileInputId, previewId) {
@@ -386,11 +387,16 @@
         // Load data saat halaman dibuka
         async function loadData() {
             try {
-                // Try to load from API first
-                const response = await fetch(API_URL);
+                // Try to load from REST API first
+                const response = await fetch(`${REST_API_URL}?limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
                 if (response.ok) {
-                    const result = await response.json();
-                    let data = result.data;
+                    const results = await response.json();
+                    let data = results.length > 0 ? results[0] : null;
 
                     // Fallback to JSON file if API returns no data
                     if (!data) {
@@ -546,12 +552,19 @@
 
                 // Load existing data to preserve other fields
                 let existingData = {};
+                let existingId = null;
                 try {
-                    const response = await fetch(API_URL);
+                    const response = await fetch(`${REST_API_URL}?limit=1`, {
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY
+                        }
+                    });
                     if (response.ok) {
-                        const result = await response.json();
-                        if (result.data) {
-                            existingData = result.data;
+                        const results = await response.json();
+                        if (results.length > 0) {
+                            existingData = results[0];
+                            existingId = results[0].id;
                         }
                     }
                 } catch (e) {
@@ -606,23 +619,37 @@
                     data.gallery_images = galleryImagesUrls;
                 }
 
-                // Save to API
-                const saveResponse = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (!saveResponse.ok) {
-                    const errorData = await saveResponse.json();
-                    throw new Error(errorData.error || 'Failed to save data');
+                // Save to REST API
+                let saveResponse;
+                if (existingId) {
+                    // Update existing record
+                    saveResponse = await fetch(`${REST_API_URL}?id=eq.${existingId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Insert new record
+                    saveResponse = await fetch(REST_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify(data)
+                    });
                 }
 
-                const saveResult = await saveResponse.json();
-                if (!saveResult.success) {
-                    throw new Error('Failed to save data');
+                if (!saveResponse.ok) {
+                    const errorText = await saveResponse.text();
+                    throw new Error(`Failed to save data: ${errorText}`);
                 }
 
                 showAlert('✅ Data berhasil disimpan ke database! Refresh halaman timeless untuk melihat perubahan.', 'success');

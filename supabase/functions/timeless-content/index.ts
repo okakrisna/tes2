@@ -20,20 +20,22 @@ Deno.serve(async (req: Request) => {
 
     // GET - Read content
     if (req.method === "GET") {
-      // Read from Supabase storage or database
-      const { createClient } = await import("npm:@supabase/supabase-js@2");
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
 
-      // Try to get from database first
-      const { data: dbData, error: dbError } = await supabase
-        .from("timeless_content")
-        .select("*")
-        .maybeSingle();
+      // Use REST API directly instead of JS client
+      const response = await fetch(`${supabaseUrl}/rest/v1/timeless_content?select=*&limit=1`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': supabaseKey,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (!dbError && dbData) {
-        return new Response(JSON.stringify({ data: dbData }), {
+      if (response.ok) {
+        const results = await response.json();
+        const data = results.length > 0 ? results[0] : null;
+        return new Response(JSON.stringify({ data }), {
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json",
@@ -53,41 +55,63 @@ Deno.serve(async (req: Request) => {
     // POST/PUT - Save content
     if (req.method === "POST" || req.method === "PUT") {
       const contentData = await req.json();
-      
-      const { createClient } = await import("npm:@supabase/supabase-js@2");
+
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
 
-      // Check if record exists
-      const { data: existing } = await supabase
-        .from("timeless_content")
-        .select("id")
-        .maybeSingle();
+      // Check if record exists using REST API
+      const checkResponse = await fetch(`${supabaseUrl}/rest/v1/timeless_content?select=id&limit=1`, {
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': supabaseKey,
+          'Content-Type': 'application/json'
+        }
+      });
 
+      const existing = await checkResponse.json();
       let result;
-      if (existing) {
+
+      if (existing && existing.length > 0) {
         // Update existing record
-        result = await supabase
-          .from("timeless_content")
-          .update(contentData)
-          .eq("id", existing.id)
-          .select()
-          .single();
+        const updateResponse = await fetch(`${supabaseUrl}/rest/v1/timeless_content?id=eq.${existing[0].id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(contentData)
+        });
+
+        if (!updateResponse.ok) {
+          const error = await updateResponse.text();
+          throw new Error(`Update failed: ${error}`);
+        }
+
+        result = await updateResponse.json();
       } else {
         // Insert new record
-        result = await supabase
-          .from("timeless_content")
-          .insert([contentData])
-          .select()
-          .single();
+        const insertResponse = await fetch(`${supabaseUrl}/rest/v1/timeless_content`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(contentData)
+        });
+
+        if (!insertResponse.ok) {
+          const error = await insertResponse.text();
+          throw new Error(`Insert failed: ${error}`);
+        }
+
+        result = await insertResponse.json();
       }
 
-      if (result.error) {
-        throw result.error;
-      }
-
-      return new Response(JSON.stringify({ success: true, data: result.data }), {
+      return new Response(JSON.stringify({ success: true, data: result[0] || result }), {
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
