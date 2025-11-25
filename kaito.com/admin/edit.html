@@ -788,18 +788,41 @@
             const checkbox = document.getElementById('password_protected');
             const passwordField = document.getElementById('password-field');
 
-            checkbox.addEventListener('change', function() {
-                passwordField.style.display = this.checked ? 'block' : 'none';
-            });
-        }
-
-        // Check if PROJECT_ID is provided
-        if (!PROJECT_ID) {
-            alert('❌ No project ID provided. Redirecting to dashboard...');
-            window.location.href = 'dashboard.html';
+            if (checkbox && passwordField) {
+                checkbox.addEventListener('change', function() {
+                    passwordField.style.display = this.checked ? 'block' : 'none';
+                });
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            console.log('Current URL:', window.location.href);
+            console.log('PROJECT_ID:', PROJECT_ID);
+
+            // Check if PROJECT_ID is provided
+            if (!PROJECT_ID) {
+                const currentUrl = window.location.href;
+                console.error('No project ID in URL:', currentUrl);
+
+                // Show error message with more details
+                document.body.innerHTML = `
+                    <div style="max-width: 600px; margin: 100px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; font-family: system-ui;">
+                        <h1 style="color: #ef4444; margin-bottom: 20px;">❌ Error</h1>
+                        <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+                            No project ID provided in URL
+                        </p>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 30px;">
+                            This page requires a project ID parameter.<br>
+                            Example: <code>edit.html?id=123</code>
+                        </p>
+                        <a href="dashboard.html" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 500;">
+                            ← Back to Dashboard
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
             loadData();
             initializePasswordToggle();
         });
