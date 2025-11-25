@@ -589,6 +589,9 @@
                 return;
             }
 
+            console.log('Storing project ID in localStorage:', id);
+            localStorage.setItem('editProjectId', id);
+
             const url = `edit.html?id=${id}`;
             console.log('Navigating to:', url);
             console.log('Full URL:', new URL(url, window.location.href).href);
