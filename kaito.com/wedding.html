@@ -77,9 +77,15 @@
 
         async function loadWedding() {
             try {
-                // Get slug from URL path
-                const path = window.location.pathname;
-                const slug = path.split('/').pop().replace('.html', '');
+                // Get slug from URL - support both path and query parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                let slug = urlParams.get('slug');
+
+                // Fallback: try to get from path
+                if (!slug) {
+                    const path = window.location.pathname;
+                    slug = path.split('/').pop().replace('.html', '');
+                }
 
                 if (!slug || slug === 'wedding') {
                     showError('No wedding specified', 'Please provide a valid wedding invitation URL.');

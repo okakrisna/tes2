@@ -545,7 +545,9 @@
         }
 
         function previewProject(slug) {
-            window.open(`/wedding/${slug}`, '_blank');
+            // Use timeless template directly with slug parameter for now
+            // This works with simple static server (no routing needed)
+            window.open(`/timeless/?slug=${slug}`, '_blank');
         }
 
         async function deleteProject(id, name) {
