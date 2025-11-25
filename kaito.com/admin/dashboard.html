@@ -491,6 +491,14 @@
                 allProjects = await response.json();
                 filteredProjects = allProjects;
 
+                console.log('Projects loaded:', allProjects.length);
+                console.log('First project sample:', allProjects[0]);
+                allProjects.forEach((p, i) => {
+                    if (!p.id) {
+                        console.error(`Project ${i} missing ID:`, p);
+                    }
+                });
+
                 updateStats();
                 renderProjects();
 
@@ -571,7 +579,21 @@
         }
 
         function editProject(id) {
-            window.location.href = `edit.html?id=${id}`;
+            console.log('editProject called with ID:', id);
+            console.log('ID type:', typeof id);
+            console.log('ID is valid:', id && id !== 'undefined' && id !== 'null');
+
+            if (!id || id === 'undefined' || id === 'null') {
+                alert('❌ Error: Invalid project ID\n\nProject ID is: ' + id + '\n\nPlease reload the dashboard and try again.');
+                console.error('Invalid project ID:', id);
+                return;
+            }
+
+            const url = `edit.html?id=${id}`;
+            console.log('Navigating to:', url);
+            console.log('Full URL:', new URL(url, window.location.href).href);
+
+            window.location.href = url;
         }
 
         function previewProject(slug, template) {
