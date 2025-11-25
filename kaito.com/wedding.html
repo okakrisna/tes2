@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Wedding...</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .loading-container {
+            text-align: center;
+            color: white;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: white;
+            color: #2d3748;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .error h1 {
+            color: #fc8181;
+            margin-bottom: 16px;
+        }
+
+        .error p {
+            color: #718096;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container" id="loading">
+        <div class="spinner"></div>
+        <p>Loading wedding invitation...</p>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fnewihswvgtgzzsfaeis.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuZXdpaHN3dmd0Z3p6c2ZhZWlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NzAwNzcsImV4cCI6MjA3OTU0NjA3N30.0OiXAfBDe5qGw8us5i9rjfNR75XdS0RlFojhy_RhKsY';
+
+        async function loadWedding() {
+            try {
+                // Get slug from URL path
+                const path = window.location.pathname;
+                const slug = path.split('/').pop().replace('.html', '');
+
+                if (!slug || slug === 'wedding') {
+                    showError('No wedding specified', 'Please provide a valid wedding invitation URL.');
+                    return;
+                }
+
+                console.log('Loading wedding with slug:', slug);
+
+                // Fetch project data from database
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/timeless_content?slug=eq.${slug}`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load wedding data');
+                }
+
+                const results = await response.json();
+
+                if (results.length === 0) {
+                    showError('Wedding not found', 'This wedding invitation does not exist or has been removed.');
+                    return;
+                }
+
+                const project = results[0];
+
+                // Check if project is active
+                if (project.status !== 'active') {
+                    showError('Wedding not available', 'This wedding invitation is not publicly available yet.');
+                    return;
+                }
+
+                // Increment view count
+                await fetch(`${SUPABASE_URL}/rpc/increment_views`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ project_slug: slug })
+                }).catch(err => console.log('View count update failed:', err));
+
+                // Store project data in sessionStorage for template to use
+                sessionStorage.setItem('weddingData', JSON.stringify(project));
+
+                // Redirect to appropriate template
+                const template = project.template_name || 'timeless';
+                window.location.href = `/${template}/index.html?slug=${slug}`;
+
+            } catch (error) {
+                console.error('Error loading wedding:', error);
+                showError('Error loading wedding', 'An error occurred while loading this wedding invitation. Please try again later.');
+            }
+        }
+
+        function showError(title, message) {
+            document.getElementById('loading').innerHTML = `
+                <div class="error">
+                    <h1>❌ ${title}</h1>
+                    <p>${message}</p>
+                    <a href="/" class="btn">← Go to Homepage</a>
+                </div>
+            `;
+        }
+
+        // Load wedding on page load
+        loadWedding();
+    </script>
+</body>
+</html>

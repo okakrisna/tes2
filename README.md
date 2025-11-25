@@ -24,14 +24,33 @@ Alternatif jika memiliki Node.js:
 - Fitur dinamis WordPress (PHP, admin, database) tidak aktif dalam salinan statis ini.
 - Jika ingin migrasi ke proyek statis penuh, kita bisa menyesuaikan referensi aset menjadi lokal (butuh langkah tambahan).
 
-## 💾 Database & Admin Panel
+## 💾 Database & Multi-Template Admin System
 
-Project ini sekarang menggunakan **Supabase** untuk menyimpan data dinamis.
+Project ini sekarang menggunakan **Supabase** untuk menyimpan data dinamis dan mendukung **multiple wedding templates**!
 
-### Admin Panel
-- URL: `http://localhost:5173/admin/`
-- Bisa edit semua konten, upload gambar, dan langsung tersimpan ke database
-- Data otomatis sinkron ke halaman timeless
+### 🎯 Features
+- ✅ **Multi-Template Support** - Kelola berbagai template (Timeless, Elegant, dan lainnya)
+- ✅ **Multi-Project Management** - Satu admin bisa manage banyak wedding projects
+- ✅ **Dynamic URL** - Setiap project punya URL unik (`/wedding/couple-name`)
+- ✅ **Project Dashboard** - List, filter, search semua projects
+- ✅ **Template Switching** - Ganti template untuk setiap project
+- ✅ **Analytics** - Track views per project
+- ✅ **Status Management** - Draft, Active, Archived
+
+### 🚀 Admin Panel
+- **Dashboard**: `http://localhost:5173/admin/` atau `http://localhost:5173/admin/dashboard.html`
+- **Create New**: `http://localhost:5173/admin/create.html`
+- **Edit Project**: `http://localhost:5173/admin/edit.html?id={project-id}`
+
+### 📱 Akses Wedding Invitation
+- URL Format: `/wedding/{slug}` atau `/timeless/?slug={slug}`
+- Contoh: `/wedding/hanson-catherine`
+- Sistem otomatis load template yang sesuai dari database
+
+### 🎨 Available Templates
+1. **Timeless** - Classic & elegant design ✅
+2. **Elegant** - Minimalist & sophisticated ⚙️ (dalam progress)
+3. **Classic** - Coming soon 🔜
 
 ### Setup Database Baru
 Jika pindah ke account Supabase baru, ikuti panduan lengkap di **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)**
@@ -40,7 +59,7 @@ Jika pindah ke account Supabase baru, ikuti panduan lengkap di **[SUPABASE_SETUP
 1. Buka Supabase Dashboard → SQL Editor
 2. Copy-paste SQL dari file `SUPABASE_SETUP.md`
 3. Update credentials di `.env` file
-4. Update URL & anon key di `admin/index.html` dan `timeless/index.html`
+4. Update URL & anon key di admin files dan template files
 5. Done! ✅
 
 Lihat **SUPABASE_SETUP.md** untuk detail lengkap.
