@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management - Wedding Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-icon.yellow { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+        .stat-icon.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .stat-icon.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-icon.red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+        .stat-content h3 {
+            font-size: 24px;
+            color: #2d3748;
+        }
+
+        .stat-content p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .filters input:focus,
+        .filters select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kanban-column {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .column-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .kanban-column.pending { border-top: 4px solid #fbbf24; }
+        .kanban-column.in-progress { border-top: 4px solid #3b82f6; }
+        .kanban-column.completed { border-top: 4px solid #10b981; }
+
+        .order-card {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .order-card.priority-low { border-left-color: #94a3b8; }
+        .order-card.priority-medium { border-left-color: #3b82f6; }
+        .order-card.priority-high { border-left-color: #f59e0b; }
+        .order-card.priority-urgent { border-left-color: #ef4444; }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .order-number {
+            font-size: 11px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .priority-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-badge.low { background: #e2e8f0; color: #64748b; }
+        .priority-badge.medium { background: #dbeafe; color: #2563eb; }
+        .priority-badge.high { background: #fed7aa; color: #ea580c; }
+        .priority-badge.urgent { background: #fee2e2; color: #dc2626; }
+
+        .order-client {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .order-meta {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .template-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .template-badge.timeless {
+            background: #e0e7ff;
+            color: #667eea;
+        }
+
+        .template-badge.elegant {
+            background: #fce7f3;
+            color: #f5576c;
+        }
+
+        .payment-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+            margin-left: 5px;
+        }
+
+        .payment-badge.unpaid { background: #fee2e2; color: #dc2626; }
+        .payment-badge.partial { background: #fed7aa; color: #ea580c; }
+        .payment-badge.paid { background: #d1fae5; color: #059669; }
+
+        .order-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .order-actions button {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-view {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 16px;
+            color: #718096;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+            font-size: 22px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #718096;
+            line-height: 1;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Orders Management</h1>
+        <div class="header-actions">
+            <a href="dashboard.html" class="btn btn-secondary">
+                ← Dashboard
+            </a>
+            <button class="btn btn-primary" onclick="openAddOrderModal()">
+                + New Order
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-icon yellow">⏳</div>
+                <div class="stat-content">
+                    <h3 id="stat-pending">0</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon blue">🔨</div>
+                <div class="stat-content">
+                    <h3 id="stat-progress">0</h3>
+                    <p>In Progress</p>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green">✅</div>
+                <div class="stat-content">
+                    <h3 id="stat-completed">0</h3>
+                    <p>Completed</p>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon red">🚨</div>
+                <div class="stat-content">
+                    <h3 id="stat-urgent">0</h3>
+                    <p>Urgent Orders</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <input type="text" id="search" placeholder="🔍 Search client name..." style="min-width: 250px;">
+            <select id="filter-template">
+                <option value="">All Templates</option>
+                <option value="timeless">Timeless</option>
+                <option value="elegant">Elegant</option>
+            </select>
+            <select id="filter-priority">
+                <option value="">All Priorities</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+            </select>
+            <select id="filter-payment">
+                <option value="">All Payments</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="partial">Partial</option>
+                <option value="paid">Paid</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadOrders()">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <div id="loading" class="loading">
+            ⏳ Loading orders...
+        </div>
+
+        <div id="kanban-board" class="kanban-board" style="display: none;">
+            <div class="kanban-column pending">
+                <div class="column-header">
+                    <div class="column-title">
+                        ⏳ Pending
+                    </div>
+                    <div class="column-count" id="count-pending">0</div>
+                </div>
+                <div id="column-pending"></div>
+            </div>
+
+            <div class="kanban-column in-progress">
+                <div class="column-header">
+                    <div class="column-title">
+                        🔨 In Progress
+                    </div>
+                    <div class="column-count" id="count-progress">0</div>
+                </div>
+                <div id="column-in-progress"></div>
+            </div>
+
+            <div class="kanban-column completed">
+                <div class="column-header">
+                    <div class="column-title">
+                        ✅ Completed
+                    </div>
+                    <div class="column-count" id="count-completed">0</div>
+                </div>
+                <div id="column-completed"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addOrderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Order</h2>
+                <button class="close-btn" onclick="closeAddOrderModal()">&times;</button>
+            </div>
+            <form id="orderForm" onsubmit="submitOrder(event)">
+                <div class="form-group">
+                    <label>Order Number *</label>
+                    <input type="text" id="order-number" required placeholder="e.g., ORD-001">
+                </div>
+
+                <div class="form-group">
+                    <label>Client Name *</label>
+                    <input type="text" id="client-name" required placeholder="e.g., John & Jane">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="client-phone" placeholder="e.g., 08123456789">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="client-email" placeholder="client@email.com">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Template</label>
+                        <select id="template-name">
+                            <option value="">Select Template</option>
+                            <option value="timeless">Timeless</option>
+                            <option value="elegant">Elegant</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Wedding Date</label>
+                        <input type="date" id="wedding-date">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Order Date *</label>
+                        <input type="date" id="order-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="date" id="deadline">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority *</label>
+                        <select id="priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Status *</label>
+                        <select id="payment-status" required>
+                            <option value="unpaid" selected>Unpaid</option>
+                            <option value="partial">Partial</option>
+                            <option value="paid">Paid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Price (Rp)</label>
+                    <input type="number" id="price" placeholder="e.g., 150000">
+                </div>
+
+                <div class="form-group">
+                    <label>Project URL</label>
+                    <input type="url" id="project-url" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddOrderModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="viewOrderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="close-btn" onclick="closeViewOrderModal()">&times;</button>
+            </div>
+            <div id="order-details"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://fnewihswvgtgzzsfaeis.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuZXdpaHN3dmd0Z3p6c2ZhZWlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NzAwNzcsImV4cCI6MjA3OTU0NjA3N30.0OiXAfBDe5qGw8us5i9rjfNR75XdS0RlFojhy_RhKsY';
+
+        let allOrders = [];
+        let filteredOrders = [];
+
+        async function loadOrders() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('kanban-board').style.display = 'none';
+
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load orders');
+
+                allOrders = await response.json();
+                applyFilters();
+                updateStats();
+                renderKanban();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('kanban-board').style.display = 'grid';
+
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p style="color: #fc8181;">❌ Error loading orders. Please refresh the page.</p>
+                `;
+            }
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const templateFilter = document.getElementById('filter-template').value;
+            const priorityFilter = document.getElementById('filter-priority').value;
+            const paymentFilter = document.getElementById('filter-payment').value;
+
+            filteredOrders = allOrders.filter(order => {
+                const matchSearch = !search || order.client_name.toLowerCase().includes(search);
+                const matchTemplate = !templateFilter || order.template_name === templateFilter;
+                const matchPriority = !priorityFilter || order.priority === priorityFilter;
+                const matchPayment = !paymentFilter || order.payment_status === paymentFilter;
+                return matchSearch && matchTemplate && matchPriority && matchPayment;
+            });
+
+            updateStats();
+            renderKanban();
+        }
+
+        function updateStats() {
+            const pending = filteredOrders.filter(o => o.status === 'pending').length;
+            const progress = filteredOrders.filter(o => o.status === 'in_progress').length;
+            const completed = filteredOrders.filter(o => o.status === 'completed').length;
+            const urgent = filteredOrders.filter(o => o.priority === 'urgent').length;
+
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-progress').textContent = progress;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-urgent').textContent = urgent;
+        }
+
+        function renderKanban() {
+            const pendingOrders = filteredOrders.filter(o => o.status === 'pending');
+            const progressOrders = filteredOrders.filter(o => o.status === 'in_progress');
+            const completedOrders = filteredOrders.filter(o => o.status === 'completed');
+
+            document.getElementById('count-pending').textContent = pendingOrders.length;
+            document.getElementById('count-progress').textContent = progressOrders.length;
+            document.getElementById('count-completed').textContent = completedOrders.length;
+
+            renderColumn('column-pending', pendingOrders);
+            renderColumn('column-in-progress', progressOrders);
+            renderColumn('column-completed', completedOrders);
+        }
+
+        function renderColumn(columnId, orders) {
+            const column = document.getElementById(columnId);
+
+            if (orders.length === 0) {
+                column.innerHTML = '<div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 14px;">No orders</div>';
+                return;
+            }
+
+            column.innerHTML = orders.map(order => `
+                <div class="order-card priority-${order.priority}" onclick="viewOrder('${order.id}')">
+                    <div class="order-header">
+                        <div class="order-number">${order.order_number}</div>
+                        <div class="priority-badge ${order.priority}">${order.priority}</div>
+                    </div>
+                    <div class="order-client">${order.client_name}</div>
+                    ${order.wedding_date ? `<div class="order-meta">💒 ${new Date(order.wedding_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''}
+                    ${order.deadline ? `<div class="order-meta">⏰ Deadline: ${new Date(order.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</div>` : ''}
+                    ${order.price ? `<div class="order-meta">💰 Rp ${parseFloat(order.price).toLocaleString('id-ID')}</div>` : ''}
+                    <div>
+                        ${order.template_name ? `<span class="template-badge ${order.template_name}">${order.template_name}</span>` : ''}
+                        <span class="payment-badge ${order.payment_status}">${order.payment_status}</span>
+                    </div>
+                    <div class="order-actions">
+                        <button class="btn-view" onclick="event.stopPropagation(); changeStatus('${order.id}', '${order.status}')">
+                            ${order.status === 'pending' ? '▶️ Start' : order.status === 'in_progress' ? '✅ Complete' : '🔄 Reopen'}
+                        </button>
+                        <button class="btn-edit" onclick="event.stopPropagation(); deleteOrder('${order.id}')">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openAddOrderModal() {
+            document.getElementById('order-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('addOrderModal').style.display = 'flex';
+        }
+
+        function closeAddOrderModal() {
+            document.getElementById('addOrderModal').style.display = 'none';
+            document.getElementById('orderForm').reset();
+        }
+
+        async function submitOrder(event) {
+            event.preventDefault();
+
+            const orderData = {
+                order_number: document.getElementById('order-number').value,
+                client_name: document.getElementById('client-name').value,
+                client_phone: document.getElementById('client-phone').value || null,
+                client_email: document.getElementById('client-email').value || null,
+                template_name: document.getElementById('template-name').value || null,
+                wedding_date: document.getElementById('wedding-date').value || null,
+                order_date: document.getElementById('order-date').value,
+                deadline: document.getElementById('deadline').value || null,
+                priority: document.getElementById('priority').value,
+                payment_status: document.getElementById('payment-status').value,
+                price: parseFloat(document.getElementById('price').value) || 0,
+                project_url: document.getElementById('project-url').value || null,
+                notes: document.getElementById('notes').value || null,
+                status: 'pending'
+            };
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (!response.ok) throw new Error('Failed to add order');
+
+                alert('✅ Order added successfully!');
+                closeAddOrderModal();
+                loadOrders();
+
+            } catch (error) {
+                console.error('Error adding order:', error);
+                alert('❌ Error adding order. Please try again.');
+            }
+        }
+
+        async function changeStatus(orderId, currentStatus) {
+            const statusMap = {
+                'pending': 'in_progress',
+                'in_progress': 'completed',
+                'completed': 'pending'
+            };
+
+            const newStatus = statusMap[currentStatus];
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!response.ok) throw new Error('Failed to update status');
+
+                loadOrders();
+
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('❌ Error updating status. Please try again.');
+            }
+        }
+
+        async function deleteOrder(orderId) {
+            if (!confirm('Are you sure you want to delete this order?')) return;
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete order');
+
+                alert('✅ Order deleted successfully!');
+                loadOrders();
+
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                alert('❌ Error deleting order. Please try again.');
+            }
+        }
+
+        function viewOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const details = `
+                <div style="line-height: 1.8;">
+                    <p><strong>Order Number:</strong> ${order.order_number}</p>
+                    <p><strong>Client:</strong> ${order.client_name}</p>
+                    ${order.client_phone ? `<p><strong>Phone:</strong> ${order.client_phone}</p>` : ''}
+                    ${order.client_email ? `<p><strong>Email:</strong> ${order.client_email}</p>` : ''}
+                    ${order.template_name ? `<p><strong>Template:</strong> <span class="template-badge ${order.template_name}">${order.template_name}</span></p>` : ''}
+                    ${order.wedding_date ? `<p><strong>Wedding Date:</strong> ${new Date(order.wedding_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
+                    <p><strong>Order Date:</strong> ${new Date(order.order_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    ${order.deadline ? `<p><strong>Deadline:</strong> ${new Date(order.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
+                    <p><strong>Status:</strong> <span class="priority-badge ${order.status}">${order.status}</span></p>
+                    <p><strong>Priority:</strong> <span class="priority-badge ${order.priority}">${order.priority}</span></p>
+                    <p><strong>Payment:</strong> <span class="payment-badge ${order.payment_status}">${order.payment_status}</span></p>
+                    ${order.price ? `<p><strong>Price:</strong> Rp ${parseFloat(order.price).toLocaleString('id-ID')}</p>` : ''}
+                    ${order.project_url ? `<p><strong>Project URL:</strong> <a href="${order.project_url}" target="_blank">${order.project_url}</a></p>` : ''}
+                    ${order.notes ? `<p><strong>Notes:</strong><br>${order.notes}</p>` : ''}
+                </div>
+            `;
+
+            document.getElementById('order-details').innerHTML = details;
+            document.getElementById('viewOrderModal').style.display = 'flex';
+        }
+
+        function closeViewOrderModal() {
+            document.getElementById('viewOrderModal').style.display = 'none';
+        }
+
+        document.getElementById('search').addEventListener('input', applyFilters);
+        document.getElementById('filter-template').addEventListener('change', applyFilters);
+        document.getElementById('filter-priority').addEventListener('change', applyFilters);
+        document.getElementById('filter-payment').addEventListener('change', applyFilters);
+
+        window.addEventListener('click', function(event) {
+            const addModal = document.getElementById('addOrderModal');
+            const viewModal = document.getElementById('viewOrderModal');
+            if (event.target === addModal) closeAddOrderModal();
+            if (event.target === viewModal) closeViewOrderModal();
+        });
+
+        window.addEventListener('DOMContentLoaded', loadOrders);
+    </script>
+</body>
+</html>
