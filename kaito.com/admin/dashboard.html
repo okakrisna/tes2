@@ -299,6 +299,29 @@
             color: white;
         }
 
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: #718096;
+            margin-bottom: 24px;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -331,12 +354,12 @@
     <div class="header">
         <h1>🎊 Wedding Projects Dashboard</h1>
         <div class="header-actions">
-            <a href="analytics.html" class="btn btn-secondary">
-                📊 Sales Analytics
-            </a>
             <button class="btn btn-secondary" onclick="refreshData()">
                 🔄 Refresh
             </button>
+            <a href="create.html" class="btn btn-primary">
+                ➕ Create New Wedding
+            </a>
         </div>
     </div>
 
@@ -369,48 +392,6 @@
                 <div class="stat-content">
                     <h3 id="stat-drafts">0</h3>
                     <p>Draft Projects</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Template Cards Section -->
-        <div style="margin-bottom: 40px;">
-            <h2 style="color: #2d3748; font-size: 20px; margin-bottom: 20px;">📋 Available Templates</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div class="template-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s;">
-                    <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 48px;">
-                        ⏱️
-                    </div>
-                    <div style="padding: 20px;">
-                        <h3 style="color: #2d3748; font-size: 18px; margin-bottom: 8px;">Timeless Template</h3>
-                        <p style="color: #718096; font-size: 14px; margin-bottom: 16px;">Classic elegant design with countdown timer</p>
-                        <div style="display: flex; gap: 8px;">
-                            <a href="../timeless/" target="_blank" class="btn btn-secondary" style="flex: 1; justify-content: center; text-align: center; font-size: 13px;">
-                                👁️ Preview
-                            </a>
-                            <button id="edit-btn-timeless" onclick="editTemplateProject('timeless')" class="btn btn-primary" style="flex: 1; justify-content: center; text-align: center; font-size: 13px; cursor: pointer;">
-                                ✏️ Edit
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="template-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s;">
-                    <div style="height: 200px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; font-size: 48px;">
-                        💎
-                    </div>
-                    <div style="padding: 20px;">
-                        <h3 style="color: #2d3748; font-size: 18px; margin-bottom: 8px;">Elegant Template</h3>
-                        <p style="color: #718096; font-size: 14px; margin-bottom: 16px;">Modern sophisticated design with animations</p>
-                        <div style="display: flex; gap: 8px;">
-                            <a href="../elegant/" target="_blank" class="btn btn-secondary" style="flex: 1; justify-content: center; text-align: center; font-size: 13px;">
-                                👁️ Preview
-                            </a>
-                            <button id="edit-btn-elegant" onclick="editTemplateProject('elegant')" class="btn btn-primary" style="flex: 1; justify-content: center; text-align: center; font-size: 13px; cursor: pointer;">
-                                ✏️ Edit
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -472,6 +453,15 @@
         <div id="projects-grid" class="projects-grid" style="display: none;">
             <!-- Projects will be loaded here -->
         </div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">💍</div>
+            <h2>No Wedding Projects Yet</h2>
+            <p>Start creating your first wedding invitation project!</p>
+            <a href="create.html" class="btn btn-primary">
+                ➕ Create Your First Project
+            </a>
+        </div>
     </div>
 
     <script>
@@ -485,6 +475,7 @@
             try {
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('projects-grid').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'none';
 
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/timeless_content?select=*&order=created_at.desc`, {
                     headers: {
@@ -512,7 +503,12 @@
                 renderProjects();
 
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('projects-grid').style.display = 'grid';
+
+                if (allProjects.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                } else {
+                    document.getElementById('projects-grid').style.display = 'grid';
+                }
 
             } catch (error) {
                 console.error('Error loading projects:', error);
@@ -593,9 +589,6 @@
                 return;
             }
 
-            console.log('Storing project ID in localStorage:', id);
-            localStorage.setItem('editProjectId', id);
-
             const url = `edit.html?id=${id}`;
             console.log('Navigating to:', url);
             console.log('Full URL:', new URL(url, window.location.href).href);
@@ -606,39 +599,6 @@
         function previewProject(slug, template) {
             const templatePath = template === 'elegant' ? '/elegant/' : '/timeless/';
             window.open(`${templatePath}?slug=${slug}`, '_blank');
-        }
-
-        // Edit template project - load project ID from database
-        async function editTemplateProject(templateName) {
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/timeless_content?select=id&template_name=eq.${templateName}&order=created_at.desc&limit=1`, {
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to load template project');
-                }
-
-                const projects = await response.json();
-
-                if (projects.length === 0) {
-                    alert(`❌ No ${templateName} template project found.\n\nPlease create a project with this template first.`);
-                    return;
-                }
-
-                const projectId = projects[0].id;
-                console.log(`Found ${templateName} project ID:`, projectId);
-
-                localStorage.setItem('editProjectId', projectId);
-                window.location.href = `edit.html?id=${projectId}`;
-
-            } catch (error) {
-                console.error('Error loading template project:', error);
-                alert('❌ Error loading template project. Please try again.');
-            }
         }
 
         // Bulk Operations
